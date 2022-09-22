@@ -132,6 +132,7 @@ body {
   .user {
     display: flex;
     cursor: pointer;
+    position: relative;
     flex-direction: "row";
     align-items: center;
     padding: 10px 0;
@@ -141,6 +142,12 @@ body {
       max-height: 50px;
       border: 1px solid #eee;
       border-radius: 100%;
+    }
+    i.online {
+      color: #00ff00;
+      position: absolute;
+      bottom: 10px;
+      left: 35px;
     }
     gap: 20px;
     & h4,
@@ -419,11 +426,11 @@ body {
   background: #555;
 }
 .scrollToBottomBtn {
-  bottom: 80px!important;
-  right: 35px!important;
-  width: 30px!important;
-  height: 30px!important;
-  border-radius: 100%!important;
+  bottom: 80px !important;
+  right: 35px !important;
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 100% !important;
 }
 .scrollToBottomBtn::before {
   font-family: "Font Awesome 6 Free";

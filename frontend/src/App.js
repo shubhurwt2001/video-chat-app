@@ -114,7 +114,20 @@ function App() {
 
   useEffect(() => {
     if (me) {
-      socket = socketIOClient(ENDPOINT);
+      socket = socketIOClient(ENDPOINT, { query: "id=" + me.id });
+
+      socket.on("i am online", (live) => {
+        const onlines = users;
+        onlines.map((online) => {
+          if (live.some((e) => e.id == online.id)) {
+            online.online = true;
+          } else {
+            online.online = false;
+          }
+        });
+        setUsers([...onlines]);
+      });
+
       socket.on("call recieved", (by, roomid, to) => {
         if (to.id == me.id) {
           Swal.fire({
@@ -335,17 +348,26 @@ function App() {
       const dbRef = ref(db, `messages/${me.id}`);
       onValue(dbRef, (snapshot) => {
         const unreads = users;
-        var latest = { time: 0, user: null };
 
+        const orderArray = [];
+
+        // var orderuser = [];
         snapshot.forEach((childSnapshot) => {
           const childKey = childSnapshot.key;
           const childData = childSnapshot.val();
+
           Object.values(childData).map((data) => {
-            if (data.time >= latest.time) {
-              latest.time = data.time;
-              latest.user = childKey;
+            let found = orderArray.findIndex((x) => x.id == childKey);
+            if (found != -1) {
+              orderArray[found].time = data.time;
+            } else {
+              orderArray.push({
+                time: data.time,
+                id: childKey,
+              });
             }
           });
+
           unreads.map((user) => {
             if (user.id == childKey) {
               user.unread = 0;
@@ -358,24 +380,19 @@ function App() {
           });
         });
 
-        if (latest.user) {
-          var index = unreads.findIndex((x) => x.id == latest.user);
-          moveUp(unreads, index);
-        }
-        // setLastestMessage(latest);
+        orderArray.sort((a, b) => (b.time > a.time ? 1 : -1));
+
+        orderArray.map((order, index) => {
+          let foundUser = unreads.findIndex((x) => x.id == order.id);
+          [unreads[index], unreads[foundUser]] = [
+            unreads[foundUser],
+            unreads[index],
+          ];
+        });
         setUsers([...unreads]);
       });
     }
   }, [me]);
-
-  const moveUp = (array, index) => {
-    if (index < 1 || index >= array.length) {
-      // Can't move the 0th item or any item outside the bounds!
-      return;
-    }
-
-    [array[index - 1], array[index]] = [array[index], array[index - 1]];
-  };
 
   useEffect(() => {
     if (selected) {

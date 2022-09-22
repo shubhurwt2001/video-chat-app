@@ -6,6 +6,7 @@ const Users = ({ users, selectUser, me }) => {
       return (
         <div className="user" onClick={() => selectUser(user.id)} key={user.id}>
           <img src={user.image} alt={user.username} />
+          {user.online && <i className="fa-solid fa-circle online"></i>}
           <p>
             {user.firstName} {user.lastName}
           </p>

@@ -24,9 +24,14 @@ let socketname = {};
 let socketType = {};
 let micSocket = {};
 let videoSocket = {};
-let roomBoard = {};
+let online = [];
 
 io.on("connection", (socket) => {
+  if (socket.handshake.query["id"]) {
+    online.push({ socket: socket.id, id: socket.handshake.query["id"] });
+    io.emit("i am online", online);
+  }
+
   socket.on("call", (by, roomid, to) => {
     io.emit("call recieved", by, roomid, to);
   });
@@ -138,6 +143,14 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
+    const lives = online.filter((live) => {
+      return live.socket != socket.id;
+    });
+
+    online = lives;
+
+    io.emit("i am online", online);
+
     if (!socketroom[socket.id]) return;
     if (!rooms[socketroom[socket.id]]) return;
     if (!socketType[socket.id]) {
@@ -176,10 +189,6 @@ io.on("connection", (socket) => {
     );
   });
 });
-
-// const getApiAndEmit = (socket) => {
-//   socket.emit("my-socket", socket.id);
-// };
 
 server.listen(PORT, () =>
   console.log(`Server is up and running on port ${PORT}`)
