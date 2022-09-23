@@ -952,12 +952,7 @@ function App() {
                             </>
                           )}
 
-                          {message.from == me.id &&
-                            (message.read == true ? (
-                              <i class="fa-solid fa-check-double read"></i>
-                            ) : (
-                              <i class="fa-solid fa-check-double"></i>
-                            ))}
+                          
                         </p>
                       </div>
                       <div className="clear"></div>
@@ -967,6 +962,12 @@ function App() {
                         }
                       >
                         {moment(message.time).startOf("minute").fromNow()}
+                        {message.from == me.id &&
+                            (message.read == true ? (
+                              <i class="fa-solid fa-check-double read"></i>
+                            ) : (
+                              <i class="fa-solid fa-check-double"></i>
+                            ))}
                       </p>
                     </div>
                   );
