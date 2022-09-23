@@ -8,6 +8,7 @@ import Swal from "sweetalert2/dist/sweetalert2.js";
 import "sweetalert2/src/sweetalert2.scss";
 import { initializeApp } from "firebase/app";
 import {
+  get,
   getDatabase,
   onValue,
   push,
@@ -372,7 +373,7 @@ function App() {
             if (user.id == childKey) {
               user.unread = 0;
               Object.values(childData).map((data) => {
-                if (data.read == false) {
+                if (data.read == false && data.from != me.id) {
                   user.unread++;
                 }
               });
@@ -408,14 +409,38 @@ function App() {
             childData.to == selectedRef.current ||
             childData.from == selectedRef.current
           ) {
-            if (childData.read == false) {
+            if (
+              childData.read == false &&
+              childData.from == selectedRef.current
+            ) {
               update(
                 ref(db, `messages/${me.id}/${selectedRef.current}/${childKey}`),
                 {
                   read: true,
                 }
-              );
+              ).then(() => {
+                onValue(
+                  ref(db, `messages/${selectedRef.current}/${me.id}`),
+                  (results) => {
+                    results.forEach((snapshot) => {
+                      update(
+                        ref(
+                          db,
+                          `messages/${selectedRef.current}/${me.id}/${snapshot.key}`
+                        ),
+                        {
+                          read: true,
+                        }
+                      );
+                    });
+                  },
+                  {
+                    onlyOnce: true,
+                  }
+                );
+              });
             }
+
             childData.key = childKey;
             messArr.push(childData);
           }
@@ -718,7 +743,7 @@ function App() {
         to: selected.id,
         image: me.image,
         time: Date.now(),
-        read: true,
+        read: false,
       });
       const otherMessageListRef = ref(db, `messages/${selected.id}/${me.id}`);
       const newOtherMessageRef = push(otherMessageListRef);
@@ -926,6 +951,13 @@ function App() {
                               )}
                             </>
                           )}
+
+                          {message.from == me.id &&
+                            (message.read == true ? (
+                              <i class="fa-solid fa-check-double read"></i>
+                            ) : (
+                              <i class="fa-solid fa-check-double"></i>
+                            ))}
                         </p>
                       </div>
                       <div className="clear"></div>
