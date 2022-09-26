@@ -25,11 +25,40 @@ let socketType = {};
 let micSocket = {};
 let videoSocket = {};
 let online = [];
-
+let lastSeens = [];
 io.on("connection", (socket) => {
-  if (socket.handshake.query["id"]) {
-    online.push({ socket: socket.id, id: socket.handshake.query["id"] });
-    io.emit("i am online", online);
+  const id = socket.handshake.query["id"];
+
+  if (id) {
+    if (online.length > 0) {
+      var lastindex = online.findIndex((e) => e.id == id);
+    } else {
+      var lastindex = -1;
+    }
+
+    if (lastindex >= 0) {
+      online.splice(lastindex, 1);
+    } else {
+      online.push({
+        socket: socket.id,
+        id: id,
+      });
+    }
+
+    if (lastSeens.length > 0) {
+      var index = lastSeens.findIndex((e) => e.id == id);
+    } else {
+      var index = -1;
+    }
+
+    if (index >= 0) {
+      lastSeens.splice(index, 1);
+      // delete lastSeens[index];
+    }
+
+    lastSeens.push({ id: id, lastSeen: "Online", socket: socket.id });
+
+    io.emit("i am online", online, lastSeens);
   }
 
   socket.on("call", (by, roomid, to) => {
@@ -149,7 +178,20 @@ io.on("connection", (socket) => {
 
     online = lives;
 
-    io.emit("i am online", online);
+    if (lastSeens.length > 0) {
+      var last = lastSeens.findIndex((e) => e.id == id);
+    } else {
+      var last = -1;
+    }
+
+    if (last >= 0) {
+      lastSeens[last].lastSeen = Date.now();
+      lastSeens[last].socket = socket.id;
+    } else {
+      lastSeens.push({ id: id, lastSeen: Date.now(), socket: socket.id });
+    }
+
+    io.emit("i am online", online, lastSeens);
 
     if (!socketroom[socket.id]) return;
     if (!rooms[socketroom[socket.id]]) return;
