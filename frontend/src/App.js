@@ -7,6 +7,8 @@ import { v4 as uuidv4 } from "uuid";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import "sweetalert2/src/sweetalert2.scss";
 import { initializeApp } from "firebase/app";
+import data from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
 import {
   get,
   getDatabase,
@@ -27,6 +29,13 @@ import {
 
 const firebaseConfig = {
   //add your firebase credentials.......
+  apiKey: "AIzaSyDjAaGCWL69banNOJ60lkQzZyzfpDToihE",
+  authDomain: "video-chat-app-894a0.firebaseapp.com",
+  projectId: "video-chat-app-894a0",
+  storageBucket: "video-chat-app-894a0.appspot.com",
+  messagingSenderId: "313359688921",
+  appId: "1:313359688921:web:47387c5a7e7841599e8ac8",
+  databaseURL: "https://video-chat-app-894a0-default-rtdb.firebaseio.com",
 };
 
 // Initialize Firebase
@@ -80,6 +89,8 @@ function App() {
   const myVideo = useRef(null);
 
   const selectedRef = useRef(null);
+
+  const [emoji, setEmoji] = useState(false);
 
   const selectUser = (id) => {
     const user = users.filter((user) => {
@@ -796,7 +807,7 @@ function App() {
                 to: selected.id,
                 image: me.image,
                 time: Date.now(),
-                read: true,
+                read: false,
               });
               const otherMessageListRef = ref(
                 db,
@@ -950,6 +961,29 @@ function App() {
                                   </>
                                 ) : message.type.search("video") != -1 ? (
                                   <video controls src={message.url} />
+                                ) : message.type.search("pdf") != -1 ? (
+                                  <a
+                                    href={message.url}
+                                    target="_blank"
+                                    style={{
+                                      textAlign: "center",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      flexDirection: "column",
+                                    }}
+                                  >
+                                    <img src="/pdf.png" />
+                                    <span
+                                      style={{
+                                        fontSize: "14px",
+                                        background: "rgba(0,0,0,0.5)",
+                                        padding: "5px 10px 7px",
+                                        borderRadius: "14px",
+                                      }}
+                                    >
+                                      {message.name}
+                                    </span>
+                                  </a>
                                 ) : (
                                   <>
                                     Download :{" "}
@@ -1013,10 +1047,37 @@ function App() {
                     onChange={(e) => sendFireFile(e)}
                   />
                 </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEmoji(!emoji);
+                  }}
+                  style={{ paddingRight: "15px" }}
+                >
+                  <i
+                    className={`fa-solid fa-face-smile ${
+                      emoji ? "selected" : ""
+                    }`}
+                  ></i>
+                </button>
+                {emoji && (
+                  <Picker
+                    className="emojiBox"
+                    data={data}
+                    onClickOutside={() => setEmoji(false)}
+                    onEmojiSelect={(e) => {
+                      fireMessage.current.value =
+                        fireMessage.current.value + e.native;
+                    }}
+                  />
+                )}
                 <input
                   type="text"
                   ref={fireMessage}
                   placeholder="Start typing to send a message...."
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
                   onKeyPress={(event) => {
                     if (event.key === "Enter") {
                       sendFireMessage();

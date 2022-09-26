@@ -60,6 +60,7 @@ body {
     .footer {
       display: flex;
       margin-bottom: 10px;
+      position: relative;
       input {
         flex: 1;
         font-size: 16px;
@@ -77,6 +78,14 @@ body {
         color: #fff;
         font-size: 32px;
         cursor: pointer;
+        .selected{
+          color: #4ecca3;
+        }
+      }
+      em-emoji-picker {
+        position: absolute;
+        bottom: 60px;
+        left: 60px;
       }
     }
     .messages {
