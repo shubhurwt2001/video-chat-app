@@ -26,13 +26,7 @@ import {
 } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA_vQFCOWKQX7JduZfcrobFg-3gJZnSyt8",
-  authDomain: "jobportal-65f4d.firebaseapp.com",
-  databaseURL: "https://jobportal-65f4d-default-rtdb.firebaseio.com",
-  projectId: "jobportal-65f4d",
-  storageBucket: "jobportal-65f4d.appspot.com",
-  messagingSenderId: "152436235104",
-  appId: "1:152436235104:web:91969bf3c55d6e32c09c05",
+  //add your firebase credentials.......
 };
 
 // Initialize Firebase
@@ -117,13 +111,19 @@ function App() {
     if (me) {
       socket = socketIOClient(ENDPOINT, { query: "id=" + me.id });
 
-      socket.on("i am online", (live) => {
+      socket.on("i am online", (live, last) => {
         const onlines = users;
         onlines.map((online) => {
           if (live.some((e) => e.id == online.id)) {
             online.online = true;
           } else {
             online.online = false;
+          }
+          var lastIndex = last.findIndex((e) => e.id == online.id);
+          if (lastIndex >= 0) {
+            online.lastSeen = last[lastIndex].lastSeen;
+          } else {
+            online.lastSeen = null;
           }
         });
         setUsers([...onlines]);
@@ -889,9 +889,20 @@ function App() {
               {selected ? (
                 <div className="user">
                   <img src={selected.image} alt={selected.username} />
-                  <h4>
-                    {selected.firstName} {selected.lastName}
-                  </h4>
+                  <>
+                    <h4>
+                      {selected.firstName} {selected.lastName}
+                      <p>
+                        {selected.lastSeen &&
+                          (selected.lastSeen == "Online"
+                            ? selected.lastSeen
+                            : moment(selected.lastSeen)
+                                .startOf("minutes")
+                                .fromNow())}
+                      </p>
+                    </h4>
+                  </>
+
                   {/* <button>
                 <i className="fa-solid fa-phone"></i>
               </button> */}
@@ -924,7 +935,21 @@ function App() {
                             <>
                               {message.type ? (
                                 message.type.search("image") != -1 ? (
-                                  <img src={message.url} />
+                                  <>
+                                    <a
+                                      onClick={() =>
+                                        window.open(
+                                          message.url,
+                                          "targetWindow",
+                                          "toolbar=no, location=no, status=no, menubar=no, scrollbars=yes, resizable=yes, width=1090px, height=550px, top=25px left=120px"
+                                        )
+                                      }
+                                    >
+                                      <img src={message.url} />
+                                    </a>
+                                  </>
+                                ) : message.type.search("video") != -1 ? (
+                                  <video controls src={message.url} />
                                 ) : (
                                   <>
                                     Download :{" "}
@@ -951,8 +976,6 @@ function App() {
                               )}
                             </>
                           )}
-
-                          
                         </p>
                       </div>
                       <div className="clear"></div>
@@ -963,11 +986,11 @@ function App() {
                       >
                         {moment(message.time).startOf("minute").fromNow()}
                         {message.from == me.id &&
-                            (message.read == true ? (
-                              <i class="fa-solid fa-check-double read"></i>
-                            ) : (
-                              <i class="fa-solid fa-check-double"></i>
-                            ))}
+                          (message.read == true ? (
+                            <i className="fa-solid fa-check-double read"></i>
+                          ) : (
+                            <i className="fa-solid fa-check-double"></i>
+                          ))}
                       </p>
                     </div>
                   );
